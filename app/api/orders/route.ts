@@ -1,6 +1,12 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import type { CheckoutCartItem } from '@/types/prisma';
+
+type TransactionClient = Omit<
+  typeof prisma,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends' | '$use'
+>;
 
 // GET: Retrieve order history for current user
 export async function GET(req: NextRequest) {
@@ -59,7 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get current cart items
-    const cartItems = await prisma.cartItem.findMany({
+    const cartItems: CheckoutCartItem[] = await prisma.cartItem.findMany({
       where: { userId: session.userId },
       include: {
         foodItem: {
@@ -77,13 +83,16 @@ export async function POST(req: NextRequest) {
     const firstItem = cartItems[0];
     const restaurant = firstItem.foodItem.restaurant;
 
-    const subtotal = cartItems.reduce((acc, item) => acc + item.foodItem.price * item.quantity, 0);
+    const subtotal = cartItems.reduce(
+      (acc: number, item: CheckoutCartItem) => acc + item.foodItem.price * item.quantity,
+      0,
+    );
     const tax = Math.round(subtotal * 0.05 * 100) / 100; // 5% GST
     const deliveryCharge = restaurant.deliveryFee;
     const total = Math.round((subtotal + tax + deliveryCharge) * 100) / 100;
 
     // Place order in transaction
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: TransactionClient) => {
       // 1. Create order
       const newOrder = await tx.order.create({
         data: {

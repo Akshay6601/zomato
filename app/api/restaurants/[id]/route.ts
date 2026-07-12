@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
+import type { MenuCategorySummary, RestaurantWithMenuAndReviews } from '@/types/prisma';
 
 export async function GET(
   req: NextRequest,
@@ -8,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const restaurant = await prisma.restaurant.findUnique({
+    const restaurant: RestaurantWithMenuAndReviews | null = await prisma.restaurant.findUnique({
       where: { id },
       include: {
         foodItems: {
@@ -36,7 +37,7 @@ export async function GET(
     }
 
     // Get unique categories present in the restaurant's menu
-    const menuCategoriesMap = new Map();
+    const menuCategoriesMap = new Map<string, MenuCategorySummary>();
     restaurant.foodItems.forEach((item) => {
       if (!menuCategoriesMap.has(item.category.id)) {
         menuCategoriesMap.set(item.category.id, {

@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { Prisma } from '@prisma/client';
+import type { RestaurantWhereInput } from '@/types/prisma';
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category') || '';
     const minRating = parseFloat(searchParams.get('rating') || '0');
 
-    const where: Prisma.RestaurantWhereInput = {};
+    const where: RestaurantWhereInput = {};
 
     if (search) {
       where.OR = [
