@@ -1,0 +1,116 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  cartItems CartItem[]
+  orders    Order[]
+  reviews   Review[]
+}
+
+model Restaurant {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  bannerImage  String
+  logo         String
+  cuisine      String
+  rating       Float      @default(0.0)
+  deliveryTime Int
+  deliveryFee  Float
+  distance     Float
+  priceRange   String     // e.g. "$$" or "₹150 for one"
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  foodItems    FoodItem[]
+  orders       Order[]
+  reviews      Review[]
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  image     String
+  foodItems FoodItem[]
+}
+
+model FoodItem {
+  id           String      @id @default(cuid())
+  name         String
+  description  String?
+  image        String
+  price        Float
+  isVeg        Boolean     // true for Veg, false for Non Veg
+  rating       Float       @default(0.0)
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  categoryId   String
+  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodItemId String
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, foodItemId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId    String
+  restaurant      Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  deliveryAddress String
+  paymentMethod   String
+  subtotal        Float
+  tax             Float
+  deliveryCharge  Float
+  total           Float
+  status          String      @default("PENDING") // e.g. PENDING, COMPLETED, DELIVERED
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  orderItems      OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  foodItemId String
+  foodItem   FoodItem @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  quantity   Int
+  price      Float    // price at the time of purchase
+  createdAt  DateTime @default(now())
+}
+
+model Review {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rating       Int        // 1 to 5
+  comment      String
+  createdAt    DateTime   @default(now())
+}

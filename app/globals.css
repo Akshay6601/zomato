@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+body {
+  background-color: #fafafa;
+  color: #171717;
+}
+
+/* Hide scrollbar for category lists */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
